@@ -59,8 +59,8 @@ public class WorldObject : MonoBehaviour
     }
 
     public virtual void MouseClick(GameObject hitObject, Vector3 hitPoint, Player controller) {
-        if(currentlySelected && hitObject && hitObject.name != "Ground") {
-            WorldObject worldObject = hitObject.transform.root.GetComponent<WorldObject>();
+        if(currentlySelected && hitObject && hitObject.transform.parent && hitObject.name != "Ground") {
+            WorldObject worldObject = hitObject.transform.parent.GetComponent<WorldObject>();
             if (worldObject) ChangeSelection(worldObject, controller);
         }
     }
@@ -81,5 +81,11 @@ public class WorldObject : MonoBehaviour
 
     protected virtual void DrawSelectionBox(Rect selectBox) {
         GUI.Box(selectBox, "");
+    }
+
+    public virtual void SetHoverState(GameObject hoverObject) {
+        if(player && player.human && currentlySelected) {
+            if(hoverObject.name != "Ground") player.hud.SetCursorState(CursorState.Select);
+        }
     }
 }

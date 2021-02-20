@@ -24,20 +24,34 @@ public class UserInput : MonoBehaviour
     }
 
     private void MoveCamera() {
+        bool mouseScroll = false;
+
         float xpos = Input.mousePosition.x;
         float ypos = Input.mousePosition.y;
         Vector3 movement = new Vector3(0,0,0);
 
         if (xpos >= 0 && xpos < ResourceManager.ScrollWidth) {
             movement.x -= ResourceManager.ScrollSpeed;
+            player.hud.SetCursorState(CursorState.PanLeft);
+            mouseScroll = true;
         } else if (xpos <= Screen.width && xpos > Screen.width - ResourceManager.ScrollWidth) {
             movement.x += ResourceManager.ScrollSpeed;
+            player.hud.SetCursorState(CursorState.PanRight);
+            mouseScroll = true;
         }
 
         if (ypos >= 0 && ypos < ResourceManager.ScrollWidth) {
             movement.z -= ResourceManager.ScrollSpeed;
+            player.hud.SetCursorState(CursorState.PanDown);
+            mouseScroll = true;
         } else if (ypos <= Screen.height && ypos > Screen.height - ResourceManager.ScrollWidth) {
             movement.z += ResourceManager.ScrollSpeed;
+            player.hud.SetCursorState(CursorState.PanUp);
+            mouseScroll = true;
+        }
+
+        if (!mouseScroll) {
+            player.hud.SetCursorState(CursorState.Select);
         }
 
         movement = Camera.main.transform.TransformDirection(movement);
@@ -79,6 +93,7 @@ public class UserInput : MonoBehaviour
     private void MouseActivity() {
         if (Input.GetMouseButton(0)) LeftMouseClick();
         else if (Input.GetMouseButton(1)) RightMouseClick();
+        MouseHover();
     }
 
     private void RightMouseClick() {
@@ -95,8 +110,8 @@ public class UserInput : MonoBehaviour
             if(hitObject && hitPoint != ResourceManager.InvalidPosition) {
                 if (player.SelectedObject) {
                     player.SelectedObject.MouseClick(hitObject, hitPoint, player);
-                } else if (hitObject.name != "Ground") {
-                    WorldObject worldObject = hitObject.transform.root.GetComponent<WorldObject>();
+                } else if (hitObject && hitObject.transform.parent && hitObject.name != "Ground") {
+                    WorldObject worldObject = hitObject.transform.parent.GetComponent<WorldObject>();
                     if (worldObject) {
                         player.SelectedObject = worldObject;
                         worldObject.SetSelection(true, player.hud.GetPlayingArea());
@@ -118,5 +133,24 @@ public class UserInput : MonoBehaviour
         RaycastHit hit;
         if(Physics.Raycast(ray, out hit)) return hit.point;
         return ResourceManager.InvalidPosition;
+    }
+
+    private void MouseHover() {
+        if (player.hud.MouseInBounds()) {
+            GameObject hoverObject = FindHitObject();
+            if(hoverObject) {
+                if(player.SelectedObject) player.SelectedObject.SetHoverState(hoverObject);
+                else if(hoverObject.name != "Ground") {
+                    Player owner = hoverObject.transform.root.GetComponent<Player>();
+                    if(owner) {
+                        Unit unit = hoverObject.transform.parent.GetComponent<Unit>();
+                        Building building = hoverObject.transform.parent.GetComponent<Building>();
+                        if(owner.username == player.username && (unit || building)) {
+                            player.hud.SetCursorState(CursorState.Select);
+                        }
+                    }
+                }
+            }
+        }
     }
 }
