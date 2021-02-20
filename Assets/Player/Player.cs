@@ -14,13 +14,13 @@ public class Player : MonoBehaviour
     private Dictionary<ResourceType, int> resources, resourceLimits;
     
     void Awake() {
+        hud = GetComponentInChildren<HUD>();
         resources = InitResourceList();
         resourceLimits = InitResourceLimits();
     }
 
     // Start is called before the first frame update
     void Start() {
-        hud = GetComponentInChildren<HUD>();
         AddStartResourceLimits();
         AddStartResources();
     }
@@ -32,6 +32,25 @@ public class Player : MonoBehaviour
         }
     }
 
+    // Public Methods
+    public void IncrementResourceLimit(ResourceType type, int amount) {
+        resourceLimits[type] += amount;
+    }
+
+    public void AddResource(ResourceType type, int amount) {
+        if (resources[type] + amount <= resourceLimits[type]) {
+            resources[type] += amount;
+        }    
+    }
+
+    public void AddUnit(string unitName, Vector3 spawnPoint, Quaternion rotation) {
+        Units units = GetComponentInChildren<Units>();
+        GameObject newUnit = (GameObject) Instantiate(ResourceManager.GetUnit(unitName), spawnPoint, rotation);
+        newUnit.transform.parent = units.transform;
+    }
+    // End Public Methods
+
+    // Private Methods
     private Dictionary<ResourceType, int> InitResourceList() {
         Dictionary<ResourceType, int> list = new Dictionary<ResourceType, int>();
         list.Add(ResourceType.Money, 0);
@@ -47,26 +66,13 @@ public class Player : MonoBehaviour
     }
 
     private void AddStartResourceLimits() {
-        startMoneyLimit = 2000;
-        startPowerLimit = 500;
         IncrementResourceLimit(ResourceType.Money, startMoneyLimit);
         IncrementResourceLimit(ResourceType.Power, startPowerLimit);
     }
 
     private void AddStartResources() {
-        startMoney = 1000;
-        startPower = 500;
         AddResource(ResourceType.Money, startMoney);
         AddResource(ResourceType.Power, startPower);
     }
-
-    public void IncrementResourceLimit(ResourceType type, int amount) {
-        resourceLimits[type] += amount;
-    }
-
-    public void AddResource(ResourceType type, int amount) {
-        if (resources[type] + amount <= resourceLimits[type]) {
-            resources[type] += amount;
-        }    
-    }
+    // End Private Methods
 }
